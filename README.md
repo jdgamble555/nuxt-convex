@@ -22,6 +22,27 @@ bun install
 
 ## Development Server
 
+Create `.env.local` from `.env.example` and set your Convex deployment URL:
+
+```bash
+NUXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+```
+
+`CONVEX_URL` is also supported for compatibility with existing local Convex env files.
+
+Configure GitHub OAuth in the Convex deployment. These values are read by Convex functions during `/api/auth/callback/github`, so putting them only in `.env.local` is not enough:
+
+```bash
+npx convex env set AUTH_GITHUB_ID your-github-oauth-client-id
+npx convex env set AUTH_GITHUB_SECRET your-github-oauth-client-secret
+```
+
+Your GitHub OAuth app callback URL should be:
+
+```bash
+https://your-convex-site-url.convex.site/api/auth/callback/github
+```
+
 Start the development server on `http://localhost:3000`:
 
 ```bash
