@@ -1,62 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { api } from "~~/convex/_generated/api";
-import type { Doc } from "~~/convex/_generated/dataModel";
-
-const { data: tasks, isPending, error } = useConvexQuery(api.tasks.get);
-const { mutate: toggleCompleted } = useConvexMutation(
-    api.tasks.toggleCompleted,
-    {
-        optimisticUpdate: (localStore, args) => {
-            const currentTasks = localStore.getQuery(api.tasks.get, {});
-
-            if (!currentTasks) {
-                return;
-            }
-
-            localStore.setQuery(
-                api.tasks.get,
-                {},
-                currentTasks.map((task) =>
-                    task._id === args.id
-                        ? { ...task, isCompleted: args.isCompleted }
-                        : task,
-                ),
-            );
-    },
-    },
-);
-const { mutate: removeTask } = useConvexMutation(
-    api.tasks.remove,
-    {
-        optimisticUpdate: (localStore, args) => {
-            const currentTasks = localStore.getQuery(api.tasks.get, {});
-
-            if (!currentTasks) {
-                return;
-            }
-
-            localStore.setQuery(
-                api.tasks.get,
-                {},
-                currentTasks.filter((task) => task._id !== args.id),
-            );
-        },
-    },
-);
-
-const visibleTasks = computed(() => tasks.value ?? []);
-
-async function updateTaskCompleted(task: Doc<"tasks">) {
-    await toggleCompleted({
-        id: task._id,
-        isCompleted: !task.isCompleted,
-    });
-}
-
-async function deleteTask(task: Doc<"tasks">) {
-    await removeTask({ id: task._id });
-}
+const { tasks, isPending, error, toggleTask, removeTask } = useTasks();
 </script>
 
 <template>
@@ -71,18 +14,20 @@ async function deleteTask(task: Doc<"tasks">) {
         </div>
 
         <div class="p-5 sm:p-6">
-            <p
+            <div
                 v-if="isPending"
-                class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm font-medium text-slate-500"
+                class="flex items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-8"
+                role="status"
+                aria-label="Loading tasks"
             >
-                Loading tasks...
-            </p>
+                <LoadingSpinner />
+            </div>
             <p v-else-if="error" class="rounded-md bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
                 Unable to load tasks.
             </p>
-            <ul v-else-if="visibleTasks.length" class="space-y-3">
+            <ul v-else-if="tasks.length" class="space-y-3">
                 <li
-                    v-for="task in visibleTasks"
+                    v-for="task in tasks"
                     :key="task._id"
                     class="group rounded-md border border-slate-200 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md"
                 >
@@ -92,7 +37,7 @@ async function deleteTask(task: Doc<"tasks">) {
                             class="size-5 rounded border-slate-300 accent-teal-600 transition group-hover:scale-105"
                             type="checkbox"
                             :checked="task.isCompleted"
-                            @change="updateTaskCompleted(task)"
+                            @change="toggleTask(task)"
                         >
                         <span
                             class="min-w-0 flex-1 wrap-break-word text-base font-medium text-slate-800 transition"
@@ -106,7 +51,7 @@ async function deleteTask(task: Doc<"tasks">) {
                         type="button"
                         :aria-label="`Delete ${task.text}`"
                         title="Delete task"
-                        @click="deleteTask(task)"
+                        @click="removeTask(task)"
                     >
                         <span
                             class="size-4 bg-current"

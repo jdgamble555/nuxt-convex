@@ -14,22 +14,25 @@ const { error: authError, isAuthenticated, isLoading, signIn, signOut } = useCon
           </div>
           <button
             v-if="isAuthenticated"
-            class="min-h-11 rounded-md border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:translate-y-0 disabled:cursor-not-allowed disabled:text-slate-400"
+            class="flex min-h-11 min-w-24 items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:translate-y-0 disabled:cursor-not-allowed disabled:text-slate-400"
             type="button"
             :disabled="isLoading"
+            :aria-label="isLoading ? 'Signing out' : undefined"
             @click="signOut()"
           >
-            {{ isLoading ? "Signing out..." : "Sign out" }}
+            <LoadingSpinner v-if="isLoading" class="size-5" />
+            <span v-else>Sign out</span>
           </button>
         </div>
       </header>
 
       <section
         v-if="isLoading && !isAuthenticated"
-        class="rounded-lg border border-white/70 bg-white/85 p-8 text-center shadow-xl shadow-slate-200/70 ring-1 ring-slate-900/5 backdrop-blur sm:p-10"
+        class="flex min-h-40 items-center justify-center rounded-lg border border-white/70 bg-white/85 p-8 shadow-xl shadow-slate-200/70 ring-1 ring-slate-900/5 backdrop-blur sm:p-10"
+        role="status"
+        aria-label="Loading your tasks"
       >
-        <h2 class="text-2xl font-bold text-slate-950">Loading your tasks</h2>
-        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Finishing sign in...</p>
+        <LoadingSpinner class="size-8" />
       </section>
 
       <LoginWithGithub
